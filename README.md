@@ -7,7 +7,7 @@ Prerequisite:
 
 1. Clone the repository
 2. move inside folder
-3. rename .evn.example to .env
+3. copy .evn.example to .env
 4. go inside docker folder
 5. Run `docker-compose up`
 6. Open `http://127.0.0.1:8080/` url and login to phpmyadmin using root:root

@@ -12,23 +12,31 @@ class CustomerControllerTest extends TestCase
 {
     use RefreshDatabase; // Use this trait to reset the database after each test
     
+    protected $_customer;
     
-    public function test_index()
+    public function setUp(): void
     {
+        parent::setUp();
+        // creating user
         $data = [
             'name' => 'John Doe',
-            'phone' => '1234567890',
+            'phone' => '1234067890',
         ];
          // ------ Add new customer ----------//
         $storeResponse = $this->post(route('customers.store'), $data);
         $storeResponse->assertStatus(201);
         
-
+        $this->_customer = $storeResponse;
+       
+    }
+    
+    public function test_index()
+    {
         $response = $this->get(route('customers.index'));
         $response->assertStatus(200);
         
         $this->assertEquals('John Doe', $response['result'][0]['customer_name']);
-        $this->assertEquals($storeResponse['result']['customer_id'], $response['result'][0]['customer_id']);
+        $this->assertEquals($this->_customer['result']['customer_id'], $response['result'][0]['customer_id']);
         
     }
 
@@ -52,23 +60,16 @@ class CustomerControllerTest extends TestCase
     }
     
     public function test_update(){
-        $data = [
-            'name' => 'Neha',
-            'phone' => '9234567890',
-        ];
         
-         // ------ Add new customer ----------//
-        $storeResponse = $this->post(route('customers.store'), $data);
-        $storeResponse->assertStatus(201);
-        $expectedId = $storeResponse['result']['customer_id'];
+        $customerId = $this->_customer['result']['customer_id'];
         
         // ------ update the customer ----------//
         $updateRequest = ['customer_name' => 'Neha Bhushan'];
-        $updateResponse = $this->patch(route('customers.update', $expectedId), $updateRequest);
+        $updateResponse = $this->patch(route('customers.update', $customerId), $updateRequest);
         $updateResponse->assertStatus(204);
 
         // ------ Get customer info for compare----------//
-        $customerResponse = $this->get(route('customers.show', $expectedId));
+        $customerResponse = $this->get(route('customers.show', $customerId));
         $customerResponse->assertStatus(200);
         $this->assertEquals($updateRequest['customer_name'], $customerResponse['result']['customer_name']);
         

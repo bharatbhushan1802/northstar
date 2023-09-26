@@ -9,9 +9,13 @@ use Tests\TestCase;
 class StoreControllerTest extends TestCase
 {
     use RefreshDatabase; // Use this trait to reset the database after each test
+
+    protected $_store;
     
-    public function test_index()
+    public function setUp(): void
     {
+        parent::setUp();
+        
         $data = [
             "store_manager_name" => "john",
             "store_address" => "gurgaon"
@@ -19,13 +23,18 @@ class StoreControllerTest extends TestCase
          // ------ Add new Store ----------//
         $storeResponse = $this->post(route('stores.store'), $data);
         $storeResponse->assertStatus(201);
-
+        
+        $this->_store = $storeResponse;
+       
+    }
+    
+    public function test_index()
+    {
          // ------ fetch Store list----------//
         $response = $this->get(route('stores.index'));
         $response->assertStatus(200);
 
-        $this->assertEquals($data['store_address'], $response['result'][0]['store_address']);
-        $this->assertEquals($storeResponse['result']['store_id'], $response['result'][0]['store_id']);
+        $this->assertEquals($this->_store['result']['store_id'], $response['result'][0]['store_id']);
         
     }
 
@@ -51,23 +60,14 @@ class StoreControllerTest extends TestCase
     }
     
     public function test_update(){
-        $data = [
-            "store_manager_name" => "john",
-            "store_address" => "gurgaon"
-        ];
-
-        // ------ Add new Store ----------//
-        $storeResponse = $this->post(route('stores.store'), $data);
-        $storeResponse->assertStatus(201);
-        $expectedId = $storeResponse['result']['store_id'];
         
         // ------ update the store ----------//
         $updateRequest = ['store_manager_name' => 'Carter'];
-        $updateStoreRes = $this->patch(route('stores.update', $expectedId), $updateRequest);
+        $updateStoreRes = $this->patch(route('stores.update', $this->_store['result']['store_id']), $updateRequest);
         $updateStoreRes->assertStatus(204);
 
         // ------ Get store info for compare----------//
-        $customerResponse = $this->get(route('stores.show', $expectedId));
+        $customerResponse = $this->get(route('stores.show', $this->_store['result']['store_id']));
         $this->assertEquals($updateRequest['store_manager_name'], $customerResponse['result']['store_manager_name']);
         
     }

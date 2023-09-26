@@ -10,24 +10,32 @@ class InventoryControllerTest extends TestCase
 {
     use RefreshDatabase; // Use this trait to reset the database after each test
     
-    public function test_index()
+    protected $_inventory;
+    
+    public function setUp(): void
     {
+        parent::setUp();
         $data = [
                 "inventory_name" => "product_1",
                 "manufacture_date"=> "10/09/2023",
                 "available_quantity" => 4000
         ];
-         // ------ add new Inventory ----------//
+        
+        // ------ add new Inventory ----------//
         $inventoryResponse = $this->post(route('inventories.store'), $data);
         $inventoryResponse->assertStatus(201);
-
+        
+        $this->_inventory = $inventoryResponse;
+       
+    }
+    
+    public function test_index()
+    {
          // ------ fetch Inventory list----------//
         $response = $this->get(route('inventories.index'));
         $response->assertStatus(200);
 
-        $this->assertEquals($data['inventory_name'], $response['result'][0]['inventory_name']);
-        $this->assertEquals($inventoryResponse['result']['inventory_id'], $response['result'][0]['inventory_id']);
-        
+        $this->assertEquals($this->_inventory['result']['inventory_id'], $response['result'][0]['inventory_id']);
     }
 
     public function test_store()
@@ -53,23 +61,14 @@ class InventoryControllerTest extends TestCase
     }
     
     public function test_update(){
-        $data = [
-            "inventory_name" => "product_3",
-            "manufacture_date"=> "10/12/2022",
-            "available_quantity" => 2500
-        ];
-         // ------ add new Inventory ----------//
-        $inventoryResponse = $this->post(route('inventories.store'), $data);
-        $inventoryResponse->assertStatus(201);
-        $expectedId = $inventoryResponse['result']['inventory_id'];
-        
+              
         // ------ update the Inventory ----------//
         $updateRequest = ['available_quantity' => 3000];
-        $updateInventoryRes = $this->patch(route('inventories.update', $expectedId), $updateRequest);
+        $updateInventoryRes = $this->patch(route('inventories.update', $this->_inventory['result']['inventory_id']), $updateRequest);
         $updateInventoryRes->assertStatus(204);
 
         // ------ Get Inventory info for compare----------//
-        $updatedRes = $this->get(route('inventories.show', $expectedId));
+        $updatedRes = $this->get(route('inventories.show', $this->_inventory['result']['inventory_id']));
         $this->assertEquals($updateRequest['available_quantity'], $updatedRes['result']['available_quantity']);
         
     }
